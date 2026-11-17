@@ -1,0 +1,68 @@
+{
+  "name": "cursors-u",
+  "version": "1.0.0",
+  "private": true,
+  "description": "cursors U - Premium Custom Cursors Studio & Windows Installer by Yasser27",
+  "author": "Yasser27",
+  "main": "electron/shell.cjs",
+  "scripts": {
+    "start": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron .\"",
+    "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && electron .\"",
+    "build": "vite build",
+    "dist:win": "npm run build && electron-builder --win nsis --x64"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "electron": "^45.3.4",
+    "electron-builder": "^26.15.3",
+    "javascript-obfuscator": "^5.10.1",
+    "vite": "^6.4.3",
+    "wait-on": "^8.0.2"
+  },
+  "build": {
+    "asar": true,
+    "appId": "com.cursorsu.desktop",
+    "productName": "cursors U",
+    "directories": {
+      "output": "release"
+    },
+    "artifactName": "${productName}-Setup-${version}-${arch}.${ext}",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true
+    }
+  }
+}

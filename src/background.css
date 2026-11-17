@@ -1,0 +1,96 @@
+:root {
+  font-family: "Segoe UI", sans-serif;
+  color-scheme: dark;
+  background: #0a0a0a;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.app-shell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: radial-gradient(circle at 30% 20%, #1a3a4a 0%, #0d1d2a 20%, #0a0a0a 70%);
+}
+
+.window-bar {
+  height: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  color: #bdbdbd;
+  background: rgba(8, 12, 16, 0.28);
+  -webkit-app-region: drag;
+}
+
+.window-title {
+  padding-left: 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  user-select: none;
+}
+
+.window-drag-area {
+  height: 100%;
+  flex: 1;
+}
+
+.window-controls {
+  height: 100%;
+  display: flex;
+  -webkit-app-region: no-drag;
+}
+
+.window-control {
+  width: 46px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #d8d8d8;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.window-control:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.window-control-close:hover {
+  color: #fff;
+  background: #c42b1c;
+}
+
+.window-control svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1;
+}
+
+.window-background {
+  min-height: 0;
+  flex: 1;
+  -webkit-app-region: drag;
+}

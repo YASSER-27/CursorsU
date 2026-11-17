@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" style="height:100%;overflow:hidden">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>This PC — Windows File Explorer</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Segoe UI"', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          },
+          colors: {
+            mica: {
+              base: '#191a1f',
+              surface: '#202127',
+              elevated: '#272930',
+              hover: '#2e313a',
+              active: '#353944',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* Custom subtle scrollbars matching Windows 11 Dark Fluent UI */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  </style>
+</head>
+<body class="h-full min-h-0 bg-[#0d0e12] text-slate-100 font-sans antialiased selection:bg-sky-500/30 selection:text-sky-200 flex items-center justify-center p-0 relative overflow-hidden">
+
+  <!-- Subtle Ambient Backdrop Lighting -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute -top-40 left-1/4 w-[520px] h-[520px] rounded-full bg-sky-500/[0.06] blur-[140px]"></div>
+    <div class="absolute -bottom-40 right-1/4 w-[520px] h-[520px] rounded-full bg-indigo-500/[0.06] blur-[140px]"></div>
+  </div>
+
+  <!-- STANDALONE WINDOWS 11 DARK FILE EXPLORER WINDOW -->
+  <div
+    id="explorerWindow"
+    class="relative z-10 w-full max-w-none h-full min-h-0 max-h-full rounded-xl bg-[#191a1f] border border-white/[0.09] shadow-[0_28px_80px_-12px_rgba(0,0,0,0.85),0_0_0_1px_rgba(255,255,255,0.04)] flex flex-col overflow-hidden"
+  >
+    <!-- 1. TITLE BAR & TAB STRIP -->
+    <div class="h-10 bg-[#141519] border-b border-white/[0.06] flex items-center justify-between pl-3 pr-0 select-none shrink-0">
+      <!-- Left: Active Tab & New Tab Button -->
+      <div class="flex items-center gap-1.5 h-full pt-1.5 overflow-x-auto">
+        <!-- Active Tab -->
+        <div class="h-full px-3.5 rounded-t-lg bg-[#202127] border-t border-x border-white/[0.07] flex items-center gap-2.5 min-w-[185px] max-w-[240px] text-xs font-medium text-slate-100 shadow-sm">
+          <span id="tabIcon" class="w-4 h-4 shrink-0 flex items-center justify-center text-sky-400">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm-2 14h20v1.5H2V19z" />
+            </svg>
+          </span>
+          <span id="tabTitle" class="truncate flex-1">This PC</span>
+          <span class="w-4 h-4 rounded hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white text-[11px] cursor-pointer">✕</span>
+        </div>
+
+        <!-- Add Tab Button -->
+        <button
+          id="newTabNoticeBtn"
+          type="button"
+          title="New Tab (Ctrl+T)"
+          class="w-7 h-7 mb-1 rounded-md hover:bg-white/[0.07] flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Right: Windows Caption Controls (Minimize, Maximize, Close) -->
+      <div class="flex items-center h-full shrink-0">
+        <button
+          id="winMinBtn"
+          type="button"
+          title="Minimize"
+          class="w-11 h-full flex items-center justify-center text-slate-400 hover:bg-white/[0.07] hover:text-white transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" d="M5 12h14" />
+          </svg>
+        </button>
+        <button
+          id="winMaxBtn"
+          type="button"
+          title="Maximize"
+          class="w-11 h-full flex items-center justify-center text-slate-400 hover:bg-white/[0.07] hover:text-white transition-colors"
+        >
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <rect x="4" y="4" width="16" height="16" rx="1.5" />
+          </svg>
+        </button>
+        <button
+          id="winCloseBtn"
+          type="button"
+          title="Close"
+          class="w-11 h-full flex items-center justify-center text-slate-400 hover:bg-[#e81123] hover:text-white transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. NAVIGATION, ADDRESS BREADCRUMB & LIVE SEARCH BAR -->
+    <div class="h-12 bg-[#202127] border-b border-white/[0.06] px-3 flex items-center gap-2 shrink-0">
+      <!-- Navigation Arrows (Back, Forward, Up, Refresh) -->
+      <div class="flex items-center gap-0.5 shrink-0">
+        <button
+          id="navBackBtn"
+          type="button"
+          disabled
+          title="Back"
+          class="w-8 h-8 rounded-md flex items-center justify-center text-slate-300 hover:bg-white/[0.07] disabled:opacity-35 disabled:pointer-events-none transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button
+          id="navForwardBtn"
+          type="button"
+          disabled
+          title="Forward"
+          class="w-8 h-8 rounded-md flex items-center justify-center text-slate-300 hover:bg-white/[0.07] disabled:opacity-35 disabled:pointer-events-none transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+        <button
+          id="navUpBtn"
+          type="button"
+          title="Up to This PC"
+          class="w-8 h-8 rounded-md flex items-center justify-center text-slate-300 hover:bg-white/[0.07] transition-colors"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </button>
+        <button
+          id="navRefreshBtn"
+          type="button"
+          title="Refresh (F5)"
+          class="w-8 h-8 rounded-md flex items-center justify-center text-slate-300 hover:bg-white/[0.07] transition-colors"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Breadcrumb Address Bar -->
+      <div class="flex-1 h-8 rounded-md bg-[#272930] border border-white/[0.08] px-2.5 flex items-center gap-1.5 text-xs text-slate-200 min-w-0 overflow-hidden">
+        <svg class="w-3.5 h-3.5 text-sky-400 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm-2 14h20v1.5H2V19z" />
+        </svg>
+        <div id="breadcrumbTrail" class="flex items-center gap-1 truncate"></div>
+      </div>
+
+      <!-- Live Search Box -->
+      <div class="w-44 sm:w-64 h-8 rounded-md bg-[#272930] border border-white/[0.08] focus-within:border-sky-400/60 focus-within:bg-[#2b2e37] px-2.5 flex items-center gap-2 transition-colors shrink-0">
+        <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search This PC"
+          class="w-full bg-transparent text-xs text-slate-100 placeholder-slate-400 outline-none"
+        />
+        <button
+          id="clearSearchBtn"
+          type="button"
+          class="hidden text-slate-400 hover:text-white text-xs"
+          title="Clear search"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. FLUENT COMMAND TOOLBAR -->
+    <div class="h-11 bg-[#1e2026] border-b border-white/[0.06] px-3 flex items-center justify-between gap-2 text-xs select-none shrink-0 overflow-x-auto">
+      <div class="flex items-center gap-1">
+        <!-- New Button -->
+        <button
+          id="cmdNewBtn"
+          type="button"
+          class="px-2.5 py-1.5 rounded-md hover:bg-white/[0.07] text-slate-200 flex items-center gap-1.5 transition-colors shrink-0"
+        >
+          <span class="w-4 h-4 rounded-full bg-sky-500/20 text-sky-400 flex items-center justify-center">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </span>
+          <span class="font-medium">New</span>
+        </button>
+
+        <div class="w-px h-4 bg-white/[0.08] mx-1"></div>
+
+        <!-- Clipboard & Edit Actions -->
+        <button type="button" data-cmd="Cut" class="cmd-action p-1.5 rounded-md hover:bg-white/[0.07] text-slate-400 hover:text-slate-100 transition-colors" title="Cut (Ctrl+X)">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
+          </svg>
+        </button>
+        <button type="button" data-cmd="Copy" class="cmd-action p-1.5 rounded-md hover:bg-white/[0.07] text-slate-400 hover:text-slate-100 transition-colors" title="Copy (Ctrl+C)">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        </button>
+        <button type="button" data-cmd="Paste" class="cmd-action p-1.5 rounded-md hover:bg-white/[0.07] text-slate-400 hover:text-slate-100 transition-colors" title="Paste (Ctrl+V)">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </button>
+        <button type="button" data-cmd="Rename" class="cmd-action p-1.5 rounded-md hover:bg-white/[0.07] text-slate-400 hover:text-slate-100 transition-colors" title="Rename (F2)">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </button>
+
+        <div class="w-px h-4 bg-white/[0.08] mx-1"></div>
+
+        <!-- Sort & View Toggles -->
+        <button
+          id="sortToggleBtn"
+          type="button"
+          class="px-2.5 py-1.5 rounded-md hover:bg-white/[0.07] text-slate-300 flex items-center gap-1.5 transition-colors shrink-0"
+        >
+          <svg class="w-3.5 h-3.5 text-sky-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+          </svg>
+          <span id="sortLabel">Sort: Name</span>
+        </button>
+
+        <button
+          id="viewToggleBtn"
+          type="button"
+          class="px-2.5 py-1.5 rounded-md hover:bg-white/[0.07] text-slate-300 flex items-center gap-1.5 transition-colors shrink-0"
+        >
+          <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          <span id="viewLabel">View: Tiles</span>
+        </button>
+      </div>
+
+      <!-- Right Properties Trigger -->
+      <button
+        id="propertiesBtn"
+        type="button"
+        class="px-2.5 py-1.5 rounded-md hover:bg-white/[0.07] text-slate-300 flex items-center gap-1.5 transition-colors shrink-0"
+      >
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="hidden sm:inline">Properties</span>
+      </button>
+    </div>
+
+    <!-- 4. MAIN SPLIT WORKSPACE (LEFT NAVIGATION TREE + RIGHT CONTENT PANE) -->
+    <div class="flex-1 flex min-h-0 overflow-hidden">
+
+      <!-- LEFT NAVIGATION SIDEBAR -->
+      <aside class="w-48 sm:w-56 bg-[#191a1f] border-r border-white/[0.06] py-2.5 px-2 overflow-y-auto shrink-0 select-none">
+        <div id="sidebarTree" class="space-y-0.5 text-xs"></div>
+      </aside>
+
+      <!-- RIGHT CONTENT PANE -->
+      <main id="mainContentPane" class="flex-1 bg-[#202127] p-4 sm:p-6 overflow-y-auto">
+        <!-- Rendered dynamically by JS -->
+      </main>
+    </div>
+
+    <!-- 5. BOTTOM STATUS BAR -->
+    <footer class="h-7 bg-[#191a1f] border-t border-white/[0.06] px-3.5 flex items-center justify-between text-[11px] text-slate-400 select-none shrink-0">
+      <div class="flex items-center gap-3 truncate">
+        <span id="statusItemCount">9 items</span>
+        <span class="text-white/15">|</span>
+        <span id="statusSelectionInfo" class="truncate text-slate-300">Ready</span>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="hidden sm:inline text-slate-500">Total Free Space: 69.9 GB of 1.12 TB</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- DRIVE / ITEM PROPERTIES DIALOG (On-demand Windows-style popup) -->
+  <div id="propertiesModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm rounded-xl bg-[#202127] border border-white/[0.12] shadow-2xl overflow-hidden text-xs">
+      <div class="px-4 py-3 bg-[#191a1f] border-b border-white/[0.07] flex items-center justify-between">
+        <span id="propModalTitle" class="font-semibold text-slate-100">Properties</span>
+        <button id="closePropModalBtn" type="button" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+      <div id="propModalBody" class="p-4 space-y-3 text-slate-300"></div>
+      <div class="px-4 py-2.5 bg-[#191a1f] border-t border-white/[0.07] flex justify-end">
+        <button id="okPropModalBtn" type="button" class="px-4 py-1.5 rounded-md bg-sky-600 hover:bg-sky-500 text-white font-medium transition-colors">
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // =========================================================================
+      // 1. VIRTUAL FILE SYSTEM DATA (Matching Image 1 + Realistic Subfolders)
+      // =========================================================================
+      const SVG_ICONS = {
+        thisPc: `<svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm-2 14h20v1.5H2V19z"/></svg>`,
+        objects3d: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><path d="M16 3L28 9.8V22.2L16 29L4 22.2V9.8L16 3Z" fill="url(#grad3d)"/><path d="M16 3L28 9.8L16 16.5L4 9.8L16 3Z" fill="#7DD3FC" fill-opacity="0.55"/><path d="M16 16.5V29L28 22.2V9.8L16 16.5Z" fill="#0284C7" fill-opacity="0.45"/><defs><linearGradient id="grad3d" x1="4" y1="3" x2="28" y2="29" gradientUnits="userSpaceOnUse"><stop stop-color="#38BDF8"/><stop offset="1" stop-color="#0284C7"/></linearGradient></defs></svg>`,
+        desktop: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><rect x="3" y="5" width="26" height="18" rx="2.5" fill="url(#gradDesk)"/><rect x="5.5" y="7.5" width="21" height="13" rx="1" fill="#0F172A" fill-opacity="0.45"/><path d="M12 23H20L21.5 27H10.5L12 23Z" fill="#94A3B8"/><rect x="9" y="26.5" width="14" height="1.8" rx="0.9" fill="#CBD5E1"/><defs><linearGradient id="gradDesk" x1="3" y1="5" x2="29" y2="23" gradientUnits="userSpaceOnUse"><stop stop-color="#60A5FA"/><stop offset="1" stop-color="#2563EB"/></linearGradient></defs></svg>`,
+        documents: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><path d="M7 4C5.89543 4 5 4.89543 5 6V26C5 27.1046 5.89543 28 7 28H25C26.1046 28 27 27.1046 27 26V11L20 4H7Z" fill="url(#gradDoc)"/><path d="M20 4V11H27L20 4Z" fill="#FEF3C7"/><rect x="9" y="15" width="14" height="2" rx="1" fill="#78350F" fill-opacity="0.45"/><rect x="9" y="20" width="10" height="2" rx="1" fill="#78350F" fill-opacity="0.45"/><defs><linearGradient id="gradDoc" x1="5" y1="4" x2="27" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#FCD34D"/><stop offset="1" stop-color="#F59E0B"/></linearGradient></defs></svg>`,
+        downloads: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><rect x="4" y="5" width="24" height="22" rx="4" fill="#1E293B"/><path d="M16 8V19M16 19L11 14M16 19L21 14" stroke="#38BDF8" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 23H23" stroke="#38BDF8" stroke-width="2.6" stroke-linecap="round"/></svg>`,
+        music: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><rect x="4" y="4" width="24" height="24" rx="5" fill="url(#gradMus)"/><path d="M13 21V11L22 9V19" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10.5" cy="21" r="2.5" fill="white"/><circle cx="19.5" cy="19" r="2.5" fill="white"/><defs><linearGradient id="gradMus" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#F472B6"/><stop offset="1" stop-color="#DB2777"/></linearGradient></defs></svg>`,
+        pictures: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><rect x="3" y="5" width="26" height="22" rx="3.5" fill="url(#gradPic)"/><circle cx="10.5" cy="11.5" r="2.5" fill="#FEF08A"/><path d="M5 23L12.5 15.5L17.5 20.5L21.5 16.5L27 23H5Z" fill="#E0F2FE" fill-opacity="0.9"/><defs><linearGradient id="gradPic" x1="3" y1="5" x2="29" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#38BDF8"/><stop offset="1" stop-color="#6366F1"/></linearGradient></defs></svg>`,
+        videos: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><rect x="3" y="6" width="26" height="20" rx="3.5" fill="url(#gradVid)"/><path d="M13 11.5L21 16L13 20.5V11.5Z" fill="white"/><defs><linearGradient id="gradVid" x1="3" y1="6" x2="29" y2="26" gradientUnits="userSpaceOnUse"><stop stop-color="#A855F7"/><stop offset="1" stop-color="#7C3AED"/></linearGradient></defs></svg>`,
+        network: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><rect x="7" y="4" width="18" height="12" rx="2" fill="#38BDF8"/><rect x="9.5" y="6.5" width="13" height="7" rx="1" fill="#0F172A"/><path d="M16 16V23M7 23H25" stroke="#94A3B8" stroke-width="2.2" stroke-linecap="round"/><circle cx="16" cy="23" r="2.5" fill="#38BDF8"/></svg>`,
+        folderGeneric: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><path d="M3 8C3 6.34315 4.34315 5 6 5H12.5L15.2 8H26C27.6569 8 29 9.34315 29 11V24C29 25.6569 27.6569 27 26 27H6C4.34315 27 3 25.6569 3 24V8Z" fill="url(#gradFolder)"/><path d="M3 11H29V24C29 25.6569 27.6569 27 26 27H6C4.34315 27 3 25.6569 3 24V11Z" fill="#FBBF24"/><defs><linearGradient id="gradFolder" x1="3" y1="5" x2="29" y2="27" gradientUnits="userSpaceOnUse"><stop stop-color="#F59E0B"/><stop offset="1" stop-color="#D97706"/></linearGradient></defs></svg>`,
+        fileGeneric: `<svg class="w-full h-full" viewBox="0 0 32 32" fill="none"><path d="M7 4H19L25 10V26C25 27.1 24.1 28 23 28H7C5.9 28 5 27.1 5 26V6C5 4.9 5.9 4 7 4Z" fill="#334155"/><path d="M19 4V10H25L19 4Z" fill="#64748B"/><rect x="9" y="15" width="12" height="1.8" rx="0.9" fill="#94A3B8"/><rect x="9" y="19.5" width="9" height="1.8" rx="0.9" fill="#94A3B8"/></svg>`,
+      };
+
+      const FOLDERS = [
+        {
+          id: '3d-objects',
+          name: '3D Objects',
+          subtitle: 'System folder',
+          icon: SVG_ICONS.objects3d,
+          items: [
+            { name: 'Cursor_Crystal_Mesh.glb', type: '3D Object', size: '4.8 MB', modified: 'Nov 14, 2026' },
+            { name: 'Fluent_Icon_Pack.obj', type: '3D Object', size: '12.1 MB', modified: 'Oct 29, 2026' },
+          ],
+        },
+        {
+          id: 'desktop',
+          name: 'Desktop',
+          subtitle: 'System folder',
+          icon: SVG_ICONS.desktop,
+          items: [
+            { name: 'CursorForge Studio.lnk', type: 'Shortcut', size: '2 KB', modified: 'Nov 17, 2026' },
+            { name: 'UI_Redesign_Notes.txt', type: 'Text Document', size: '14 KB', modified: 'Nov 16, 2026' },
+          ],
+        },
+        {
+          id: 'documents',
+          name: 'Documents',
+          subtitle: 'System folder',
+          icon: SVG_ICONS.documents,
+          items: [
+            { name: 'Projects', type: 'File folder', size: '—', modified: 'Nov 15, 2026' },
+            { name: 'Design_System_Specs.pdf', type: 'PDF Document', size: '3.2 MB', modified: 'Nov 10, 2026' },
+            { name: 'Monthly_Report_2026.docx', type: 'Word Document', size: '840 KB', modified: 'Nov 02, 2026' },
+          ],
+        },
+        {
+          id: 'downloads',
+          name: 'Downloads',
+          subtitle: 'System folder',
+          icon: SVG_ICONS.downloads,
+          items: [
+            { name: 'windows-dark-explorer-preview.svg', type: 'SVG Image', size: '18 KB', modified: 'Today, 3:20 PM' },
+            { name: 'cursorforge-pack-arrow-48px.cur', type: 'Cursor File', size: '9.4 KB', modified: 'Today, 3:18 PM' },
+            { name: 'Tailwind_CheatSheet_v4.pdf', type: 'PDF Document', size: '1.9 MB', modified: 'Nov 12, 2026' },
+          ],
+        },
+        {
+          id: 'music',
+          name: 'Music',
+          subtitle: 'System folder',
+          icon: SVG_ICONS.music,
+          items: [
+            { name: 'Ambient_Focus_Mix.flac', type: 'FLAC Audio', size: '38.4 MB', modified: 'Oct 18, 2026' },
+            { name: 'Synthwave_Night_Drive.mp3', type: 'MP3 Audio', size: '9.1 MB', modified: 'Sep 24, 2026' },
+          ],
+        },
+        {
+          id: 'pictures',
+          name: 'Pictures',
+          subtitle: 'System folder',
+          icon: SVG_ICONS.pictures,
+          items: [
+            { name: 'Screenshots', type: 'File folder', size: '—', modified: 'Nov 17, 2026' },
+            { name: 'OLED_Dark_Wallpaper_4K.png', type: 'PNG Image', size: '6.7 MB', modified: 'Nov 05, 2026' },
+          ],
+        },
+        {
+          id: 'videos',
+          name: 'Videos',
+          subtitle: 'System folder',
+          icon: SVG_ICONS.videos,
+          items: [
+            { name: 'UI_Prototype_Capture.mp4', type: 'MP4 Video', size: '142 MB', modified: 'Nov 11, 2026' },
+          ],
+        },
+      ];
+
+      const DRIVES = [
+        {
+          id: 'drive-c',
+          name: 'Local Disk (C:)',
+          letter: 'C:',
+          isOsDrive: true,
+          freeText: '42.9 GB free of 222 GB',
+          usedPercent: 80.7,
+          barColor: '#0ea5e9', // Crisp Windows Cyan/Blue
+          fileSystem: 'NTFS',
+          usedBytes: '179.1 GB',
+          freeBytes: '42.9 GB',
+          capacityBytes: '222 GB',
+          items: [
+            { name: 'Program Files', type: 'File folder', size: '—', modified: 'Nov 15, 2026' },
+            { name: 'Program Files (x86)', type: 'File folder', size: '—', modified: 'Nov 12, 2026' },
+            { name: 'Users', type: 'File folder', size: '—', modified: 'Nov 17, 2026' },
+            { name: 'Windows', type: 'File folder', size: '—', modified: 'Nov 14, 2026' },
+          ],
+        },
+        {
+          id: 'drive-d',
+          name: 'Yasser27 (D:)',
+          letter: 'D:',
+          isOsDrive: false,
+          freeText: '27.0 GB free of 931 GB',
+          usedPercent: 97.1,
+          barColor: '#ef4444', // Critical Low-Space Red Bar
+          fileSystem: 'NTFS',
+          usedBytes: '904.0 GB',
+          freeBytes: '27.0 GB',
+          capacityBytes: '931 GB',
+          items: [
+            { name: 'Games & ISOs', type: 'File folder', size: '—', modified: 'Nov 16, 2026' },
+            { name: 'Backups_2026', type: 'File folder', size: '—', modified: 'Nov 09, 2026' },
+            { name: 'Media_Archive', type: 'File folder', size: '—', modified: 'Oct 30, 2026' },
+            { name: 'Dev_Workspace', type: 'File folder', size: '—', modified: 'Nov 17, 2026' },
+          ],
+        },
+      ];
+
+      const NETWORK_LOCATIONS = [
+        { name: 'YASSER-WORKSTATION', type: 'Computer', size: 'Localhost', modified: 'Online' },
+        { name: 'Home-NAS-Storage (\\\\192.168.1.10)', type: 'Network Drive', size: '4.0 TB', modified: 'Connected' },
+      ];
+
+      // =========================================================================
+      // 2. APPLICATION STATE
+      // =========================================================================
+      const state = {
+        currentLocation: 'this-pc', // 'this-pc' | 'network' | folder.id | drive.id
+        history: ['this-pc'],
+        historyIndex: 0,
+        selectedItem: null,
+        searchQuery: '',
+        foldersCollapsed: false,
+        drivesCollapsed: false,
+        sortAsc: true,
+        viewMode: 'tiles', // 'tiles' | 'details'
+        isMaximized: false,
+      };
+
+      // =========================================================================
+      // 3. HELPER FUNCTIONS
+      // =========================================================================
+      function getLocationMeta(locId) {
+        if (locId === 'this-pc') return { title: 'This PC', icon: SVG_ICONS.thisPc };
+        if (locId === 'network') return { title: 'Network', icon: SVG_ICONS.network };
+        const folder = FOLDERS.find((f) => f.id === locId);
+        if (folder) return { title: folder.name, icon: folder.icon };
+        const drive = DRIVES.find((d) => d.id === locId);
+        if (drive) return { title: drive.name, icon: renderDriveSvg(drive.isOsDrive, drive.usedPercent > 90) };
+        return { title: 'This PC', icon: SVG_ICONS.thisPc };
+      }
+
+      function renderDriveSvg(isOsDrive, isLowSpace) {
+        return `
+          <div class="relative w-full h-full flex items-center justify-center">
+            <svg class="w-9 h-9" viewBox="0 0 36 36" fill="none">
+              <rect x="4" y="10" width="28" height="16" rx="3" fill="url(#driveBody)" stroke="rgba(255,255,255,0.18)" stroke-width="1"/>
+              <path d="M4 20H32" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>
+              <circle cx="27.5" cy="23" r="1.4" fill="${isLowSpace ? '#ef4444' : '#38bdf8'}"/>
+              <rect x="8" y="22.2" width="8" height="1.6" rx="0.8" fill="rgba(255,255,255,0.25)"/>
+              <defs>
+                <linearGradient id="driveBody" x1="4" y1="10" x2="32" y2="26" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#475569"/>
+                  <stop offset="1" stop-color="#1E293B"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            ${
+              isOsDrive
+                ? `<span class="absolute -top-0.5 -left-0.5 w-4 h-4 rounded-[4px] bg-[#0ea5e9] text-white flex items-center justify-center shadow-md">
+                    <svg class="w-2.5 h-2.5" viewBox="0 0 16 16" fill="currentColor">
+                      <path d="M1 2.5l6-.8v6H1v-5.2zm7-1l7-1v7.2H8V1.5zM1 8.5h6v5.2l-6-.8V8.5zm7 0h7v7.2l-7-1V8.5z"/>
+                    </svg>
+                  </span>`
+                : ''
+            }
+          </div>
+        `;
+      }
+
+      function navigateTo(locId, pushHistory = true) {
+        state.currentLocation = locId;
+        state.selectedItem = null;
+        state.searchQuery = '';
+        const searchInput = document.getElementById('searchInput');
+        searchInput.value = '';
+        document.getElementById('clearSearchBtn').classList.add('hidden');
+
+        if (pushHistory) {
+          state.history = state.history.slice(0, state.historyIndex + 1);
+          if (state.history[state.history.length - 1] !== locId) {
+            state.history.push(locId);
+            state.historyIndex = state.history.length - 1;
+          }
+        }
+
+        updateChromeAndNav();
+        renderSidebar();
+        renderMainPane();
+      }
+
+      function updateChromeAndNav() {
+        const meta = getLocationMeta(state.currentLocation);
+        document.getElementById('tabTitle').textContent = meta.title;
+        document.getElementById('tabIcon').innerHTML = meta.icon;
+        document.getElementById('searchInput').placeholder = `Search ${meta.title}`;
+
+        // Back / Forward / Up state
+        document.getElementById('navBackBtn').disabled = state.historyIndex <= 0;
+        document.getElementById('navForwardBtn').disabled = state.historyIndex >= state.history.length - 1;
+        document.getElementById('navUpBtn').disabled = state.currentLocation === 'this-pc';
+
+        // Breadcrumb Trail
+        const trail = document.getElementById('breadcrumbTrail');
+        if (state.currentLocation === 'this-pc') {
+          trail.innerHTML = `
+            <button type="button" data-nav="this-pc" class="px-1.5 py-0.5 rounded hover:bg-white/[0.08] text-slate-100 font-medium transition-colors">This PC</button>
+          `;
+        } else {
+          trail.innerHTML = `
+            <button type="button" data-nav="this-pc" class="px-1.5 py-0.5 rounded hover:bg-white/[0.08] text-slate-300 hover:text-white transition-colors">This PC</button>
+            <span class="text-slate-500">›</span>
+            <span class="px-1.5 py-0.5 rounded bg-white/[0.05] text-slate-100 font-medium truncate">${meta.title}</span>
+          `;
+        }
+
+        trail.querySelectorAll('[data-nav]').forEach((btn) => {
+          btn.addEventListener('click', () => navigateTo(btn.dataset.nav));
+        });
+      }
+
+      // =========================================================================
+      // 4. RENDER LEFT SIDEBAR TREE
+      // =========================================================================
+      function renderSidebar() {
+        const tree = document.getElementById('sidebarTree');
+        const quickItems = FOLDERS.map((f) => ({ id: f.id, label: f.name, icon: f.icon }));
+        const driveItems = DRIVES.map((d) => ({
+          id: d.id,
+          label: d.name,
+          dotColor: d.barColor,
+        }));
+
+        tree.innerHTML = `
+          <!-- Quick Access Header -->
+          <div class="px-2 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+            <svg class="w-3 h-3 text-sky-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 7.1-1.01L12 2z"/></svg>
+            <span>Quick access</span>
+          </div>
+
+          ${quickItems
+            .map((item) => {
+              const active = state.currentLocation === item.id;
+              return `
+                <button
+                  type="button"
+                  data-nav="${item.id}"
+                  class="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-left transition-colors ${
+                    active
+                      ? 'bg-[#2e313a] text-white font-medium border-l-2 border-sky-400'
+                      : 'text-slate-300 hover:bg-white/[0.06]'
+                  }"
+                >
+                  <span class="w-4 h-4 shrink-0">${item.icon}</span>
+                  <span class="truncate">${item.label}</span>
+                </button>
+              `;
+            })
+            .join('')}
+
+          <div class="my-2 border-t border-white/[0.06]"></div>
+
+          <!-- This PC Root -->
+          <button
+            type="button"
+            data-nav="this-pc"
+            class="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-left transition-colors ${
+              state.currentLocation === 'this-pc'
+                ? 'bg-[#2e313a] text-white font-medium border-l-2 border-sky-400'
+                : 'text-slate-200 hover:bg-white/[0.06]'
+            }"
+          >
+            <span class="w-4 h-4 shrink-0">${SVG_ICONS.thisPc}</span>
+            <span class="truncate">This PC</span>
+          </button>
+
+          <!-- Indented Drives under This PC -->
+          <div class="pl-4 space-y-0.5 mt-0.5">
+            ${driveItems
+              .map((drv) => {
+                const active = state.currentLocation === drv.id;
+                return `
+                  <button
+                    type="button"
+                    data-nav="${drv.id}"
+                    class="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-left transition-colors ${
+                      active
+                        ? 'bg-[#2e313a] text-white font-medium border-l-2 border-sky-400'
+                        : 'text-slate-300 hover:bg-white/[0.06]'
+                    }"
+                  >
+                    <span class="w-2.5 h-2.5 rounded-xs shrink-0" style="background-color: ${drv.dotColor};"></span>
+                    <span class="truncate">${drv.label}</span>
+                  </button>
+                `;
+              })
+              .join('')}
+          </div>
+
+          <div class="my-2 border-t border-white/[0.06]"></div>
+
+          <!-- Network -->
+          <button
+            type="button"
+            data-nav="network"
+            class="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-left transition-colors ${
+              state.currentLocation === 'network'
+                ? 'bg-[#2e313a] text-white font-medium border-l-2 border-sky-400'
+                : 'text-slate-300 hover:bg-white/[0.06]'
+            }"
+          >
+            <span class="w-4 h-4 shrink-0">${SVG_ICONS.network}</span>
+            <span class="truncate">Network</span>
+          </button>
+        `;
+
+        tree.querySelectorAll('[data-nav]').forEach((btn) => {
+          btn.addEventListener('click', () => navigateTo(btn.dataset.nav));
+        });
+      }
+
+      // =========================================================================
+      // 5. RENDER MAIN EXPLORER PANE ("This PC" or Inner Directory)
+      // =========================================================================
+      function renderMainPane() {
+        const pane = document.getElementById('mainContentPane');
+        const q = state.searchQuery.trim().toLowerCase();
+
+        // VIEW A: "THIS PC" ROOT VIEW
+        if (state.currentLocation === 'this-pc') {
+          let filteredFolders = FOLDERS.filter((f) => f.name.toLowerCase().includes(q));
+          let filteredDrives = DRIVES.filter(
+            (d) => d.name.toLowerCase().includes(q) || d.freeText.toLowerCase().includes(q)
+          );
+
+          if (!state.sortAsc) {
+            filteredFolders = [...filteredFolders].reverse();
+            filteredDrives = [...filteredDrives].reverse();
+          }
+
+          const totalVisible = filteredFolders.length + filteredDrives.length;
+          document.getElementById('statusItemCount').textContent = `${totalVisible} item${totalVisible === 1 ? '' : 's'}`;
+          updateSelectionStatus();
+
+          if (totalVisible === 0) {
+            pane.innerHTML = `
+              <div class="h-full flex flex-col items-center justify-center text-center py-12">
+                <p class="text-sm text-slate-400">No items match "<span class="text-slate-200">${state.searchQuery}</span>"</p>
+              </div>
+            `;
+            return;
+          }
+
+          pane.innerHTML = `
+            <div class="space-y-7 max-w-5xl">
+              <!-- SECTION 1: FOLDERS (7) -->
+              <section>
+                <button
+                  id="toggleFoldersSecBtn"
+                  type="button"
+                  class="w-full flex items-center gap-2 text-xs font-semibold text-slate-200 hover:text-white mb-3 group"
+                >
+                  <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-150 ${state.foldersCollapsed ? '-rotate-90' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                  <span>Folders (${filteredFolders.length})</span>
+                  <div class="flex-1 h-px bg-white/[0.08] group-hover:bg-white/[0.14] ml-1.5 transition-colors"></div>
+                </button>
+
+                <div class="${state.foldersCollapsed ? 'hidden' : ''} grid ${
+            state.viewMode === 'tiles'
+              ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5'
+              : 'grid-cols-1 gap-1'
+          }">
+                  ${filteredFolders
+                    .map((folder) => {
+                      const isSelected = state.selectedItem?.id === folder.id;
+                      return `
+                        <div
+                          data-item-id="${folder.id}"
+                          data-item-type="folder"
+                          class="explorer-item group flex items-center gap-3 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
+                            isSelected
+                              ? 'bg-[#2e313a] border-sky-400/50 ring-1 ring-sky-400/30'
+                              : 'bg-transparent hover:bg-white/[0.05] border-transparent hover:border-white/[0.07]'
+                          }"
+                        >
+                          <div class="w-9 h-9 shrink-0 flex items-center justify-center">
+                            ${folder.icon}
+                          </div>
+                          <div class="min-w-0 flex-1">
+                            <div class="text-xs font-medium text-slate-100 truncate">${folder.name}</div>
+                            <div class="text-[11px] text-slate-400 truncate">${folder.subtitle}</div>
+                          </div>
+                        </div>
+                      `;
+                    })
+                    .join('')}
+                </div>
+              </section>
+
+              <!-- SECTION 2: DEVICES AND DRIVES (2) -->
+              <section>
+                <button
+                  id="toggleDrivesSecBtn"
+                  type="button"
+                  class="w-full flex items-center gap-2 text-xs font-semibold text-slate-200 hover:text-white mb-3 group"
+                >
+                  <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-150 ${state.drivesCollapsed ? '-rotate-90' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                  <span>Devices and drives (${filteredDrives.length})</span>
+                  <div class="flex-1 h-px bg-white/[0.08] group-hover:bg-white/[0.14] ml-1.5 transition-colors"></div>
+                </button>
+
+                <div class="${state.drivesCollapsed ? 'hidden' : ''} grid ${
+            state.viewMode === 'tiles'
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5'
+              : 'grid-cols-1 gap-2'
+          }">
+                  ${filteredDrives
+                    .map((drive) => {
+                      const isSelected = state.selectedItem?.id === drive.id;
+                      const isCritical = drive.usedPercent >= 90;
+                      return `
+                        <div
+                          data-item-id="${drive.id}"
+                          data-item-type="drive"
+                          class="explorer-item group flex items-center gap-3.5 p-3 rounded-lg border transition-all cursor-pointer select-none ${
+                            isSelected
+                              ? 'bg-[#2e313a] border-sky-400/50 ring-1 ring-sky-400/30'
+                              : 'bg-white/[0.015] hover:bg-white/[0.055] border-white/[0.05] hover:border-white/[0.1]'
+                          }"
+                        >
+                          <!-- Drive Icon -->
+                          <div class="w-11 h-11 shrink-0 flex items-center justify-center">
+                            ${renderDriveSvg(drive.isOsDrive, isCritical)}
+                          </div>
+
+                          <!-- Drive Name, Storage Bar & Free Space Text -->
+                          <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2 mb-1">
+                              <span class="text-xs font-medium text-slate-100 truncate">${drive.name}</span>
+                              ${
+                                isCritical
+                                  ? `<span class="text-[10px] font-medium px-1.5 py-0.2 rounded bg-red-500/15 text-red-300 border border-red-500/30 shrink-0">Low space</span>`
+                                  : ''
+                              }
+                            </div>
+
+                            <!-- Storage Progress Track -->
+                            <div class="w-full h-3.5 rounded-[3px] bg-[#e5e7eb]/90 overflow-hidden p-[1px] mb-1 shadow-inner">
+                              <div
+                                class="h-full rounded-[2px] transition-all duration-300"
+                                style="width: ${drive.usedPercent}%; background-color: ${drive.barColor};"
+                              ></div>
+                            </div>
+
+                            <div class="text-[11px] text-slate-300 truncate">${drive.freeText}</div>
+                          </div>
+                        </div>
+                      `;
+                    })
+                    .join('')}
+                </div>
+              </section>
+            </div>
+          `;
+
+          // Collapsible headers
+          document.getElementById('toggleFoldersSecBtn')?.addEventListener('click', () => {
+            state.foldersCollapsed = !state.foldersCollapsed;
+            renderMainPane();
+          });
+          document.getElementById('toggleDrivesSecBtn')?.addEventListener('click', () => {
+            state.drivesCollapsed = !state.drivesCollapsed;
+            renderMainPane();
+          });
+
+          // Single click = select, Double click = open directory
+          pane.querySelectorAll('.explorer-item').forEach((el) => {
+            el.addEventListener('click', () => {
+              const id = el.dataset.itemId;
+              const type = el.dataset.itemType;
+              const obj = type === 'folder' ? FOLDERS.find((f) => f.id === id) : DRIVES.find((d) => d.id === id);
+              state.selectedItem = { id, type, data: obj };
+              renderMainPane();
+            });
+            el.addEventListener('dblclick', () => {
+              navigateTo(el.dataset.itemId);
+            });
+          });
+
+          return;
+        }
+
+        // VIEW B: INNER FOLDER / DRIVE / NETWORK DIRECTORY VIEW
+        let entries = [];
+        if (state.currentLocation === 'network') {
+          entries = NETWORK_LOCATIONS;
+        } else {
+          const folder = FOLDERS.find((f) => f.id === state.currentLocation);
+          const drive = DRIVES.find((d) => d.id === state.currentLocation);
+          entries = folder ? folder.items : drive ? drive.items : [];
+        }
+
+        let filteredEntries = entries.filter((item) => item.name.toLowerCase().includes(q));
+        if (!state.sortAsc) filteredEntries = [...filteredEntries].reverse();
+
+        document.getElementById('statusItemCount').textContent = `${filteredEntries.length} item${filteredEntries.length === 1 ? '' : 's'}`;
+        updateSelectionStatus();
+
+        pane.innerHTML = `
+          <div class="max-w-5xl">
+            <!-- Details Table Header -->
+            <div class="grid grid-cols-12 gap-3 px-3 py-2 border-b border-white/[0.08] text-[11px] font-medium text-slate-400 select-none">
+              <div class="col-span-6">Name</div>
+              <div class="col-span-3">Date modified</div>
+              <div class="col-span-2">Type</div>
+              <div class="col-span-1 text-right">Size</div>
+            </div>
+
+            <div class="divide-y divide-white/[0.03] mt-1">
+              ${
+                filteredEntries.length === 0
+                  ? `<div class="py-12 text-center text-xs text-slate-400">This folder is empty.</div>`
+                  : filteredEntries
+                      .map((entry, idx) => {
+                        const isFolder = entry.type === 'File folder' || entry.type === 'Network Drive';
+                        const isSelected = state.selectedItem?.id === `entry-${idx}`;
+                        return `
+                          <div
+                            data-entry-idx="${idx}"
+                            class="inner-entry grid grid-cols-12 gap-3 items-center px-3 py-2 rounded-md text-xs cursor-pointer transition-colors ${
+                              isSelected ? 'bg-[#2e313a] text-white' : 'text-slate-200 hover:bg-white/[0.05]'
+                            }"
+                          >
+                            <div class="col-span-6 flex items-center gap-2.5 min-w-0">
+                              <span class="w-4 h-4 shrink-0">${isFolder ? SVG_ICONS.folderGeneric : SVG_ICONS.fileGeneric}</span>
+                              <span class="truncate">${entry.name}</span>
+                            </div>
+                            <div class="col-span-3 text-[11px] text-slate-400 truncate">${entry.modified}</div>
+                            <div class="col-span-2 text-[11px] text-slate-400 truncate">${entry.type}</div>
+                            <div class="col-span-1 text-[11px] text-slate-400 text-right truncate">${entry.size}</div>
+                          </div>
+                        `;
+                      })
+                      .join('')
+              }
+            </div>
+          </div>
+        `;
+
+        pane.querySelectorAll('.inner-entry').forEach((row) => {
+          row.addEventListener('click', () => {
+            const idx = Number(row.dataset.entryIdx);
+            state.selectedItem = { id: `entry-${idx}`, type: 'file', data: filteredEntries[idx] };
+            renderMainPane();
+          });
+        });
+      }
+
+      function updateSelectionStatus() {
+        const statusEl = document.getElementById('statusSelectionInfo');
+        if (!state.selectedItem) {
+          statusEl.textContent = 'Ready';
+          return;
+        }
+        const { type, data } = state.selectedItem;
+        if (type === 'drive') {
+          statusEl.textContent = `1 item selected — ${data.name} (${data.freeText})`;
+        } else if (type === 'folder') {
+          statusEl.textContent = `1 item selected — ${data.name} (${data.items.length} items inside)`;
+        } else {
+          statusEl.textContent = `1 item selected — ${data.name} (${data.size})`;
+        }
+      }
+
+      // =========================================================================
+      // 6. TOOLBAR, SEARCH & PROPERTIES INTERACTIONS
+      // =========================================================================
+      document.getElementById('navBackBtn').addEventListener('click', () => {
+        if (state.historyIndex > 0) {
+          state.historyIndex--;
+          navigateTo(state.history[state.historyIndex], false);
+        }
+      });
+
+      document.getElementById('navForwardBtn').addEventListener('click', () => {
+        if (state.historyIndex < state.history.length - 1) {
+          state.historyIndex++;
+          navigateTo(state.history[state.historyIndex], false);
+        }
+      });
+
+      document.getElementById('navUpBtn').addEventListener('click', () => {
+        if (state.currentLocation !== 'this-pc') navigateTo('this-pc');
+      });
+
+      document.getElementById('navRefreshBtn').addEventListener('click', () => {
+        renderMainPane();
+        document.getElementById('statusSelectionInfo').textContent = 'Refreshed';
+      });
+
+      const searchInput = document.getElementById('searchInput');
+      const clearSearchBtn = document.getElementById('clearSearchBtn');
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
+        renderMainPane();
+      });
+      clearSearchBtn.addEventListener('click', () => {
+        state.searchQuery = '';
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        renderMainPane();
+      });
+
+      document.getElementById('sortToggleBtn').addEventListener('click', () => {
+        state.sortAsc = !state.sortAsc;
+        document.getElementById('sortLabel').textContent = state.sortAsc ? 'Sort: Name ↑' : 'Sort: Name ↓';
+        renderMainPane();
+      });
+
+      document.getElementById('viewToggleBtn').addEventListener('click', () => {
+        state.viewMode = state.viewMode === 'tiles' ? 'details' : 'tiles';
+        document.getElementById('viewLabel').textContent = state.viewMode === 'tiles' ? 'View: Tiles' : 'View: List';
+        renderMainPane();
+      });
+
+      document.getElementById('cmdNewBtn').addEventListener('click', () => {
+        if (state.currentLocation === 'this-pc') {
+          document.getElementById('statusSelectionInfo').textContent = 'Open a drive or folder to create a new folder';
+          return;
+        }
+        const targetFolder = FOLDERS.find((f) => f.id === state.currentLocation);
+        const targetDrive = DRIVES.find((d) => d.id === state.currentLocation);
+        const list = targetFolder ? targetFolder.items : targetDrive ? targetDrive.items : null;
+        if (list) {
+          list.unshift({
+            name: `New folder (${list.length + 1})`,
+            type: 'File folder',
+            size: '—',
+            modified: 'Just now',
+          });
+          renderMainPane();
+        }
+      });
+
+      document.querySelectorAll('.cmd-action').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.cmd;
+          document.getElementById('statusSelectionInfo').textContent = state.selectedItem
+            ? `${action}: ${state.selectedItem.data.name}`
+            : `Select an item to ${action.toLowerCase()}`;
+        });
+      });
+
+      // Properties Modal
+      const propertiesModal = document.getElementById('propertiesModal');
+      document.getElementById('propertiesBtn').addEventListener('click', () => {
+        const titleEl = document.getElementById('propModalTitle');
+        const bodyEl = document.getElementById('propModalBody');
+
+        if (state.selectedItem?.type === 'drive') {
+          const d = state.selectedItem.data;
+          titleEl.textContent = `${d.name} Properties`;
+          bodyEl.innerHTML = `
+            <div class="flex items-center gap-3 pb-3 border-b border-white/[0.08]">
+              <div class="w-10 h-10">${renderDriveSvg(d.isOsDrive, d.usedPercent >= 90)}</div>
+              <div>
+                <div class="font-semibold text-white">${d.name}</div>
+                <div class="text-slate-400">Type: Local Disk (${d.fileSystem})</div>
+              </div>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex justify-between"><span class="text-slate-400">Used space:</span><span class="font-medium">${d.usedBytes}</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Free space:</span><span class="font-medium">${d.freeBytes}</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Capacity:</span><span class="font-medium">${d.capacityBytes}</span></div>
+            </div>
+            <div class="w-full h-3 rounded bg-slate-200 overflow-hidden p-[1px]">
+              <div class="h-full rounded-xs" style="width:${d.usedPercent}%; background:${d.barColor};"></div>
+            </div>
+          `;
+        } else {
+          const targetName = state.selectedItem ? state.selectedItem.data.name : getLocationMeta(state.currentLocation).title;
+          titleEl.textContent = `${targetName} Properties`;
+          bodyEl.innerHTML = `
+            <div class="space-y-2">
+              <div class="flex justify-between"><span class="text-slate-400">Name:</span><span class="font-medium text-white">${targetName}</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Location:</span><span>This PC</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Total Drives:</span><span>2 (C:, D:)</span></div>
+              <div class="flex justify-between"><span class="text-slate-400">Total Free Space:</span><span>69.9 GB</span></div>
+            </div>
+          `;
+        }
+        propertiesModal.classList.remove('hidden');
+      });
+
+      document.getElementById('closePropModalBtn').addEventListener('click', () => propertiesModal.classList.add('hidden'));
+      document.getElementById('okPropModalBtn').addEventListener('click', () => propertiesModal.classList.add('hidden'));
+
+      // Window Maximize Toggle
+      const explorerWindow = document.getElementById('explorerWindow');
+      document.getElementById('winMaxBtn').addEventListener('click', () => {
+        state.isMaximized = !state.isMaximized;
+        if (state.isMaximized) {
+          explorerWindow.classList.remove('max-w-[1160px]', 'h-[88vh]', 'max-h-[820px]', 'rounded-xl');
+          explorerWindow.classList.add('max-w-full', 'h-[96vh]', 'max-h-none', 'rounded-none');
+        } else {
+          explorerWindow.classList.add('max-w-[1160px]', 'h-[88vh]', 'max-h-[820px]', 'rounded-xl');
+          explorerWindow.classList.remove('max-w-full', 'h-[96vh]', 'max-h-none', 'rounded-none');
+        }
+      });
+
+      let cursorTestCleanup = null;
+
+      window.addEventListener('message', (event) => {
+        if (event.source !== window.parent || event.data?.type !== 'cursor-test') return;
+
+        const pane = document.getElementById('mainContentPane');
+        if (!pane) return;
+        if (event.data.action === 'clear') {
+          cursorTestCleanup?.();
+          cursorTestCleanup = null;
+          return;
+        }
+        if (event.data.action !== 'apply') return;
+
+        cursorTestCleanup?.();
+
+        const parseCursorUrl = (value) => {
+          if (typeof value !== 'string' || !value) return null;
+          let cursorUrl;
+          try {
+            cursorUrl = new URL(value, window.location.href);
+          } catch (error) {
+            console.warn('Could not apply the test cursor:', error);
+            return null;
+          }
+          if (!['http:', 'https:', 'file:', 'data:'].includes(cursorUrl.protocol)) {
+            console.warn('Rejected unsupported test cursor URL:', cursorUrl.protocol);
+            return null;
+          }
+          return cursorUrl;
+        };
+        const getRasterSources = (...values) =>
+          [...new Set(values
+            .map(parseCursorUrl)
+            .filter((url) => url && !/\.(?:ani|cur|ico)$/i.test(url.pathname))
+            .map((url) => url.href))];
+
+        const arrowSources = getRasterSources(
+          event.data.arrowImageUrl,
+          event.data.arrowFallbackUrl,
+          event.data.arrowUrl
+        );
+        const pointerSources = getRasterSources(
+          event.data.pointerImageUrl,
+          event.data.pointerFallbackUrl,
+          event.data.arrowImageUrl,
+          event.data.arrowFallbackUrl
+        );
+        if (!arrowSources.length && !pointerSources.length) {
+          console.warn('Could not apply the test cursor: no raster preview image was provided.');
+          return;
+        }
+
+        let style = document.getElementById('cursor-test-style');
+        if (!style) {
+          style = document.createElement('style');
+          style.id = 'cursor-test-style';
+          document.head.appendChild(style);
+        }
+        style.textContent = `
+          html, body, #explorerWindow, #explorerWindow * { cursor: none !important; }
+        `;
+
+        const cursorImage = document.createElement('img');
+        cursorImage.id = 'live-test-cursor';
+        cursorImage.alt = '';
+        cursorImage.setAttribute('aria-hidden', 'true');
+        cursorImage.draggable = false;
+        Object.assign(cursorImage.style, {
+          position: 'fixed',
+          zIndex: '2147483647',
+          display: 'none',
+          width: '48px',
+          height: '48px',
+          objectFit: 'contain',
+          imageRendering: 'pixelated',
+          pointerEvents: 'none',
+          margin: '0',
+          padding: '0',
+          border: '0',
+          maxWidth: 'none',
+          maxHeight: 'none'
+        });
+        document.body.appendChild(cursorImage);
+
+        const isInteractiveTarget = (target) =>
+          Boolean(target.closest('button, a, [role="button"], [data-nav], .cursor-pointer'));
+        const arrowHotspotX = Number.isFinite(Number(event.data.arrowHotspotX))
+          ? Math.max(0, Number(event.data.arrowHotspotX))
+          : 0;
+        const arrowHotspotY = Number.isFinite(Number(event.data.arrowHotspotY))
+          ? Math.max(0, Number(event.data.arrowHotspotY))
+          : 0;
+        const pointerHotspotX = Number.isFinite(Number(event.data.pointerHotspotX))
+          ? Math.max(0, Number(event.data.pointerHotspotX))
+          : arrowHotspotX;
+        const pointerHotspotY = Number.isFinite(Number(event.data.pointerHotspotY))
+          ? Math.max(0, Number(event.data.pointerHotspotY))
+          : arrowHotspotY;
+        let currentSources = [];
+        let currentSourceIndex = 0;
+        let currentSourceMode = null;
+
+        const updateCursorImage = (pointer, clientX, clientY) => {
+          const sources = pointer && pointerSources.length ? pointerSources : arrowSources;
+          if (!sources.length) {
+            cursorImage.style.display = 'none';
+            return;
+          }
+          const hotspotX = pointer ? pointerHotspotX : arrowHotspotX;
+          const hotspotY = pointer ? pointerHotspotY : arrowHotspotY;
+          const sourceMode = pointer && pointerSources.length ? 'pointer' : 'arrow';
+          if (sourceMode !== currentSourceMode) {
+            currentSources = sources;
+            currentSourceIndex = 0;
+            currentSourceMode = sourceMode;
+            cursorImage.src = sources[0];
+          }
+          const imageWidth = cursorImage.naturalWidth || 48;
+          const imageHeight = cursorImage.naturalHeight || 48;
+          const scale = Math.min(1, 48 / Math.max(imageWidth, imageHeight));
+          const renderedWidth = imageWidth * scale;
+          const renderedHeight = imageHeight * scale;
+          cursorImage.style.width = `${renderedWidth}px`;
+          cursorImage.style.height = `${renderedHeight}px`;
+          cursorImage.style.left = `${clientX - hotspotX * scale}px`;
+          cursorImage.style.top = `${clientY - hotspotY * scale}px`;
+          cursorImage.style.display = 'block';
+        };
+
+        const onCursorImageError = () => {
+          currentSourceIndex += 1;
+          if (currentSourceIndex < currentSources.length) {
+            cursorImage.src = currentSources[currentSourceIndex];
+          } else {
+            cursorImage.style.display = 'none';
+            console.warn('Could not load a preview image for the test cursor.');
+          }
+        };
+        const onMouseMove = (mouseEvent) => {
+          const target = mouseEvent.target;
+          const pointer = target instanceof Element && isInteractiveTarget(target);
+          updateCursorImage(pointer, mouseEvent.clientX, mouseEvent.clientY);
+        };
+        const onMouseLeave = () => {
+          cursorImage.style.display = 'none';
+        };
+        cursorImage.addEventListener('error', onCursorImageError);
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseleave', onMouseLeave);
+        window.addEventListener('blur', onMouseLeave);
+        cursorTestCleanup = () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseleave', onMouseLeave);
+          window.removeEventListener('blur', onMouseLeave);
+          cursorImage.removeEventListener('error', onCursorImageError);
+          cursorImage.remove();
+          style.remove();
+        };
+      });
+
+      // Initialize View
+      updateChromeAndNav();
+      renderSidebar();
+      renderMainPane();
+    });
+  </script>
+</body>
+</html>
